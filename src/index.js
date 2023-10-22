@@ -1,5 +1,5 @@
 import { fetchBreeds, fetchCatByBreed } from "./cat-api";
-import axios from "axios";
+
 import SlimSelect from 'slim-select'
 import Notiflix from 'notiflix';
 
@@ -12,61 +12,63 @@ const refs = {
 
 const { selector, loader, error, divCatInfo } = refs;
 
-// loader.classList.replace('.loader', 'is-hidden');
-// error.classList.add('is-hidden');
-// divCatInfo.classList.add('is-hidden');
+refs.loader.style.visibility = 'hidden';
+refs.error.style.visibility = 'hidden';
 
 
-// refs.selector.addEventListener('change', createMarkup);
+
 
 
 fetchBreeds()
-.then(data => {
-    return data.map(({id, name}) => ({text: name, value: id}));
-})
-        new SlimSelect({
-        select: selector,
-        data: arrBreedsId
-    })
-
-    .catch(onFetchError);
-
-selector.addEventListener('change', onSelectBreed);
-
-function onSelectBreed(event) {
-    loader.classList.replace('is-hidden', 'loader');
-    selector.classList.add('is-hidden');
-    divCatInfo.classList.add('is-hidden');
-
-    const breedId = event.currentTarget.value;
-    fetchCatByBreed(breedId)
     .then(data => {
-        loader.classList.replace('loader', 'is-hidden');
-        selector.classList.remove('is-hidden');
-        const { url, breeds } = data[0];
+        // console.log(data);
+        refs.selector.insertAdjacentHTML("beforeend", breedMarkup);
+
+        return data.map(({ id, name }) => ({ text: name, value: id }));
         
-        divCatInfo.innerHTML = `<div class="box-img"><img src="${url}" alt="${breeds[0].name}" width="400"/></div><div class="box"><h1>${breeds[0].name}</h1><p>${breeds[0].description}</p><p><b>Temperament:</b> ${breeds[0].temperament}</p></div>`
-        divCatInfo.classList.remove('is-hidden');
-    })
-    .catch(onFetchError);
-};
+        new SlimSelect({
+            select: selector,
+        
+            
+})
+    }).catch(onFetchError);
+
+function breedMarkup(arr) {
+    return arr
+        .map(({ id, name }) => `<option value = "${id}">${name}</option>`).join('');
+}
+
+
+refs.selector.addEventListener('change', selectCat);
+
+
+function selectCat(event) {
+    event.preventDefault();
+    refs.divCatInfo.innerHTML = '';
+
+    let breedId = event.currentTarget.value;
+    refs.loader.style.visibility = 'visible';
+    refs.divCatInfo.style.visibility = 'hidden';
+    
+
+    fetchCatByBreed(breedId)
+        
+        .then(data => {
+            const cat = data
+                .map(({ url }) => {
+                    return `<img src="${url}" alt="cat" width=500/>`;
+                })
+                .join('');
+            refs.divCatInfo.insertAdjacentHTML('afterbegin', cat)
+            
+           
+        })
+    
+}
+
 
 function onFetchError(error) {
-    selector.classList.remove('is-hidden');
-    loader.classList.replace('loader', 'is-hidden');
+    refs.loader.style.visibility = 'hidden';
+    refs.error.style.visibility = 'visible';
 
-    // Notify.failure('Oops! Something went wrong! Try reloading the page or select another cat breed!', {
-    //     position: 'center-center',
-    //     timeout: 5000,
-    //     width: '400px',
-    //     fontSize: '24px'
-    // });
-};
-   
-
-
-
-
-
-
-    
+}
